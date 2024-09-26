@@ -26,13 +26,13 @@ enum class FanSpeed
     Low
 };
 
-class AController
+class AcController
 {
 public:
-    AController();
+    AcController();
 
     void setFanSpeed(FanSpeed speed);
-    void setTargetTemperature(uint8_t temp);
+    void setTargetTemperature(uint32_t temp);
     void setPowerState(PowerState state);
     void setOperationMode(OperationMode mode);
 
@@ -45,7 +45,7 @@ private:
     PowerState powerState;
     OperationMode operationMode;
     FanSpeed fanSpeed;
-    uint8_t targetTemperature;
+    int targetTemperature;
 
     uint32_t transmitCommand;
 

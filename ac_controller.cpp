@@ -7,34 +7,35 @@
 constexpr uint8_t MIN_TEMPERATURE = 16;
 constexpr uint8_t MAX_TEMPERATURE = 30;
 
-AController::AController() 
+AcController::AcController() 
     : powerState(PowerState::Off),
       operationMode(OperationMode::Cooling),
       fanSpeed(FanSpeed::Auto),
       targetTemperature(22),
-      transmitCommand(0x00000683),
+      transmitCommand(0x00000683)
 {
     IrSender.begin(IR_SEND_PIN);      
 }
 
-void AController::transmitCurrentState()
-{
+void AcController::transmitCurrentState()
+{   
+    u_int32_t c = transmitCommand;
     IrSender.sendPulseDistanceWidth(
         38, 
-        9000, 
-        4700, 
+        9050, 
+        4650, 
         500, 
-        1800, 
+        1750, 
         500, 
-        700, 
-        transmitCommand, 
+        650, 
+        c, 
         48, 
         PROTOCOL_IS_LSB_FIRST, 
         0, 0);
-  
+
 }
 
-void AController::setPowerState(PowerState state)
+void AcController::setPowerState(PowerState state)
 {
     if (state == powerState)
         return;
@@ -44,7 +45,7 @@ void AController::setPowerState(PowerState state)
     transmitCurrentState();
 }
 
-void AController::setOperationMode(OperationMode mode)
+void AcController::setOperationMode(OperationMode mode)
 {
    if (mode == operationMode)
         return;
@@ -56,7 +57,7 @@ void AController::setOperationMode(OperationMode mode)
    
 }
 
-void AController::setFanSpeed(FanSpeed speed)
+void AcController::setFanSpeed(FanSpeed speed)
 {
    if (speed == fanSpeed)
         return;
@@ -67,7 +68,7 @@ void AController::setFanSpeed(FanSpeed speed)
     transmitCurrentState();
 }
 
-void AController::setTargetTemperature(uint32_t temp)
+void AcController::setTargetTemperature(uint32_t temp)
 {
     if(temp == targetTemperature)
         return;
@@ -82,26 +83,5 @@ void AController::setTargetTemperature(uint32_t temp)
 
     transmitCommand |= temp; // Set temperature bits
     transmitCurrentState();
-}
-
-
-PowerState AController::getPowerState() const
-{
-    return powerState;
-}
-
-OperationMode AController::getOperationMode() const
-{
-    return operationMode;
-}
-
-FanSpeed AController::getFanSpeed() const
-{
-    return fanSpeed;
-}
-
-uint8_t AController::getTargetTemperature() const
-{
-    return targetTemperature;
 }
 
