@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+
 enum class PowerState
 {
     On,
@@ -29,13 +30,15 @@ enum class FanSpeed
 class AcController
 {
 public:
-    AcController();
-
+    void AcControllerBegin();
     void setFanSpeed(FanSpeed speed);
-    void setTargetTemperature(uint32_t temp);
+    void setTargetTemperature(uint64_t temp);
     void setPowerState(PowerState state);
     void setOperationMode(OperationMode mode);
 
+    
+
+    uint64_t getTransmitData() const { return transmitData; }
     PowerState getPowerState() const { return powerState; }
     OperationMode getOperationMode() const { return operationMode; }
     FanSpeed getFanSpeed() const { return fanSpeed; }
@@ -46,10 +49,10 @@ private:
     OperationMode operationMode;
     FanSpeed fanSpeed;
     int targetTemperature;
+    uint64_t transmitData;
+    
 
-    uint32_t transmitCommand;
-
-    void transmitCurrentState(); // Assumed to handle IR communication
+    void transmitCurrentState(); 
 };
 
-#endif // HVAC_CONTROLLER_H
+#endif // AC_CONTROLLER_H

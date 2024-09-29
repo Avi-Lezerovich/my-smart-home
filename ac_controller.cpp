@@ -1,87 +1,78 @@
 #include "ac_controller.h"
-
-#include <IRremote.hpp> 
+#include <IRremote.h>
 
 #define IR_SEND_PIN 4
+
+
 
 constexpr uint8_t MIN_TEMPERATURE = 16;
 constexpr uint8_t MAX_TEMPERATURE = 30;
 
-AcController::AcController() 
-    : powerState(PowerState::Off),
-      operationMode(OperationMode::Cooling),
-      fanSpeed(FanSpeed::Auto),
-      targetTemperature(22),
-      transmitCommand(0x00000683)
+
+
+void AcController::AcControllerBegin() 
 {
-    IrSender.begin(IR_SEND_PIN);      
+    IrSender.begin(IR_SEND_PIN);  
+    powerState = PowerState::Off;
+    operationMode = OperationMode::Cooling;
+    fanSpeed = FanSpeed::Auto;
+    targetTemperature = 22;
+    transmitData = 0x02000683;    
 }
 
 void AcController::transmitCurrentState()
 {   
-    u_int32_t c = transmitCommand;
-    IrSender.sendPulseDistanceWidth(
-        38, 
+      uint64_t c = transmitData;
+      IrSender.sendPulseDistanceWidth(38, 
         9050, 
         4650, 
-        500, 
+        550, 
         1750, 
-        500, 
-        650, 
+        550, 
+        600, 
         c, 
         48, 
         PROTOCOL_IS_LSB_FIRST, 
-        0, 0);
+        0, 
+        0);
 
 }
 
 void AcController::setPowerState(PowerState state)
 {
-    if (state == powerState)
-        return;
-    
     powerState = state;
-    transmitCommand |= (static_cast<uint32_t>(state) << 18);
+    transmitData &= 0xFFFBFFFF;
+    transmitData |= 1 << 18;
     transmitCurrentState();
+    transmitData &= 0xFFFBFFFF;
 }
 
 void AcController::setOperationMode(OperationMode mode)
 {
-   if (mode == operationMode)
-        return;
-    
-    operationMode = mode;
-    transmitCommand &= 0xF0FFFFFF; 
-    transmitCommand |= (static_cast<uint32_t>(mode) << 24);
+    operationMode = mode; 
+    transmitData &= 0xF0FFFFFF; 
+    transmitData |= (static_cast<uint64_t>(mode) << 24);
     transmitCurrentState();
-   
 }
 
 void AcController::setFanSpeed(FanSpeed speed)
 {
-   if (speed == fanSpeed)
-        return;
-    
     fanSpeed = speed;
-    transmitCommand &= 0xFFF3FFFF;
-    transmitCommand |= (static_cast<uint32_t>(speed) << 16);
+    transmitData &= 0xFFFCFFFF;
+    transmitData |= (static_cast<uint64_t>(speed) << 16);
     transmitCurrentState();
 }
 
-void AcController::setTargetTemperature(uint32_t temp)
+void AcController::setTargetTemperature(uint64_t temp)
 {
-    if(temp == targetTemperature)
-        return;
-
     // Ensure temperature is within valid range
     temp = temp >= MIN_TEMPERATURE && temp <= MAX_TEMPERATURE ? temp : targetTemperature; 
     targetTemperature = temp;
-    temp -= MIN_TEMPERATURE; // Normalize temperature to 0-14
+    
+    temp = (temp - MIN_TEMPERATURE) << 28; // Shift temperature bits to correct position
+    transmitData &= 0x0FFFFFFF; // Clear temperature bits  
 
-    temp = (temp << 28); // Shift temperature bits to correct position
-    transmitCommand &= 0x0FFFFFFF; // Clear temperature bits  
-
-    transmitCommand |= temp; // Set temperature bits
+    transmitData |= temp; // Set temperature bits
     transmitCurrentState();
 }
 
