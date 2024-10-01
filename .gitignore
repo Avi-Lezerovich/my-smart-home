@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+
+
+.pio
+include
+lib
+test
+platformio.ini
+.vscode
